@@ -8,7 +8,7 @@
 --  
 --  EXPERIMENTAL CODE
 --  
---  This package is copyright © 2013 Arno L. Trautmann. It may be distributed and/or
+--  This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
 --  modified under the conditions of the LaTeX Project Public License, either version 1.3c
 --  of this license or (at your option) any later version. This work has the LPPL mainten-
 --  ance status ‘maintained’.
@@ -16,15 +16,30 @@ function pdf_print (...)
   for _, str in ipairs({...}) do
     pdf.print(str .. " ")
   end
-  pdf.print("\string\n")
+  pdf.print("\n")
 end
 
 function move (p1,p2)
-  pdf_print(p1,p2,"m")
+  if (p2) then
+    pdf_print(p1,p2,"m")
+  else
+    pdf_print(p1[1],p1[2],"m")
+  end
 end
 
 function line (p1,p2)
   pdf_print(p1,p2,"l")
+end
+
+function curve(p11,p12,p21,p22,p31,p32)
+  if (p22) then
+    p1,p2,p3 = {p11,p12},{p21,p22},{p31,p32}
+  else
+    p1,p2,p3 = p11,p12,p21
+  end
+  pdf_print(p1[1], p1[2],
+              p2[1], p2[2],
+              p3[1], p3[2], "c")
 end
 
 function linewidth (w)
@@ -33,6 +48,105 @@ end
 
 function stroke ()
   pdf_print("S")
+end
+
+-- welp, let's have some fun!
+-- with the function radd, a random coordinate change is added if used
+-- randfact will adjust the amount of randomization
+-- everything is relative in the grid size
+-- BUT: In fact, do we really want to have wiggly lines? …
+local randfact = 100
+local radd = function()
+  return (math.random()-0.5)*randfact
+end
+
+function placelineat(x1,y1,x2,y2)
+  xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
+  yfac = tex.pageheight/gridnry/65536 -- should both be global!
+  xar = (x2-x1)*xfac                  -- end point of the arrow
+  yar = (y2-y1)*yfac                  --
+  move(0,0)                           -- start
+  line(xar,yar)                       -- draw main line
+  stroke()
+end
+
+function placearrowat(x1,y1,x2,y2)
+  xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
+  yfac = tex.pageheight/gridnry/65536 -- should both be global!
+  xar = (x2-x1)*xfac                  -- end point of the arrow
+  yar = (y2-y1)*yfac                  --
+  parx = xar/math.sqrt(xar^2+yar^2)   -- direction of the arrow
+  pary = yar/math.sqrt(xar^2+yar^2)   --
+  perpx = -pary                       -- perp of the arrow direction
+  perpy =  parx                       --
+  move(0,0)                           -- start
+  line(xar,yar)                       -- draw main line
+  move(xar,yar)
+  line(xar-5*parx+5*perpx,yar-5*pary+5*perpy)  -- draw arrowhead
+  move(xar,yar)
+  line(xar-5*parx-5*perpx,yar-5*pary-5*perpy)
+  stroke()
+end
+
+-- better circle-approximation by using quarter circles, according to wikipedia article about Bézier curves
+function placecircleat(radius)
+  local k = 0.55228
+  local P0,P1,P2,P3
+
+  P0 = {radius,0}          P1 = {radius,radius*k}
+  P2 = {radius*k,radius}   P3 = {0,radius}
+
+  move  (P0[1],P0[2]) curve (P1,P2,P3)
+
+  P0 = {-radius,0}         P1 = {-radius,radius*k}
+  P2 = {-radius*k,radius}  P3 = {0,radius}
+
+  move  (P0[1],P0[2]) curve (P1,P2,P3)
+
+  P0 = {-radius,0}         P1 = {-radius,-radius*k}
+  P2 = {-radius*k,-radius} P3 = {0,-radius}
+
+  move  (P0[1],P0[2]) curve (P1,P2,P3)
+
+  P0 = {radius,0}          P1 = {radius,-radius*k}
+  P2 = {radius*k,-radius}  P3 = {0,-radius}
+
+  move  (P0[1],P0[2]) curve (P1,P2,P3)
+  stroke()
+end
+
+function placesquareat(length)
+  move (-length,-length)
+  line ( length,-length)
+  line ( length, length)
+  line (-length, length)
+  line (-length,-length)
+  stroke()
+end
+
+function placerectangleat(x1,y1,x2,y2)
+  xfac = tex.pagewidth/gridnrx/65536
+  yfac = tex.pageheight/gridnry/65536
+  x2 = (x2-x1)*xfac
+  y2 = (y2-y1)*yfac
+  move(0,0)
+  line(x2,0)
+  line(x2,y2)
+  line(0,y2)
+  line(0,0)
+  stroke()
+end
+
+function placefilledrectangleat(x1,y1,x2,y2)
+  xfac = tex.pagewidth/gridnrx/65536
+  yfac = tex.pageheight/gridnry/65536/1.0035  -- well, yes. Another random factor. lalala
+  x2 = (x2-x1)*xfac
+  y2 = (y2-y1)*yfac
+  linewidth(y2)
+  move(0,y2/2)
+  line(x2,y2/2)
+  stroke()
+  linewidth(1)
 end
 -- 
 --  End of File `placeat.lua'.

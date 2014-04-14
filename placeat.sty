@@ -8,113 +8,105 @@
 %% 
 %% EXPERIMENTAL CODE
 %% 
-%% This package is copyright © 2013 Arno L. Trautmann. It may be distributed and/or
+%% This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
 %% modified under the conditions of the LaTeX Project Public License, either version 1.3c
 %% of this license or (at your option) any later version. This work has the LPPL mainten-
 %% ance status ‘maintained’.
 \ProvidesPackage{placeat}%
-  [2013/04/08 v0.0a placeat package]
-\input{luatexbase.sty}
-\RequirePackage{xparse}
+  [2014/04/14 v0.0c placeat package]
+\RequirePackage{luatexbase}
 \RequirePackage{luacode}
+\RequirePackage{atbegshi}
+\RequirePackage{xparse}
 \directlua{dofile(kpse.find_file("placeat.lua"))}
-\NewDocumentCommand\placeat{ggd()d<>m}{
+\NewDocumentCommand\placeat{ggd()d<>O{}mo}{
   \IfValueT{#1}{                        %% two coordinates in { }{ } pair.
     \IfValueT{#2}{                      %% if second argument is not given, everything breaks. not nice.
-      \placeatthreenumbers{#1}{#2}{#5}
+      \def\cox{#1}
+      \def\coy{#2}
     }
   }
   \IfValueT{#3}{                        %% one argument as ( , ) coordinate pair.
-    \placeatthreenumbers{\firstof#3}{\secondof#3}{#5}
+    \def\cox{\firstof#3X}
+    \def\coy{\secondof#3X}
   }
   \IfValueT{#4}{
-    \luaexec{
+    \luadirect{
       y   = string.byte('#4',1)-64
       x   = string.byte('#4',2)-48
       x2  = string.byte('#4',3)
-      if x2 then x = x*10 + x2-48 end
-      tex.print("\\placeatthreenumbers{"..(x).."}{"..(y+1).."}")}{#5}
+      if x2 then x = x*10 + x2-48 end  -- FIXME: what exactly happens here? …
+    }
+    \def\cox{\luadirect{tex.print(x)}}
+    \def\coy{\luadirect{tex.print(y)}}
+  }
+  \placeatthreenumbers{\cox}{\coy}{\llap{#5}#6}
+
+  \IfValueT{#7}{
+    \expandafter\gdef\csname #7x\endcsname{\firstof#3X}
+    \expandafter\gdef\csname #7y\endcsname{\secondof#3X}
   }
 }
-\NewDocumentCommand\placeatminipage{mmom}{
-  \IfValueTF{#3}{\gdef\widthofplaceat{#3}}{\gdef\widthofplaceat{10cm}}
-  \placeat{#1}{#2}{\begin{minipage}{\widthofplaceat}{#4}\end{minipage}}
+\NewDocumentCommand\placerelto{oggd()d<>O{}mo}{
+  \IfValueT{#2}{                        %% two coordinates in { }{ } pair.
+    \IfValueT{#3}{                      %% if second argument is not given, everything breaks. not nice.
+      \def\cox{#2}
+      \def\coy{#3}
+    }
+  }
+  \IfValueT{#4}{                        %% one argument as ( , ) coordinate pair.
+    \def\cox{\firstof#4X}
+    \def\coy{\secondof#4X}
+  }
+  \IfValueT{#5}{
+    \luaexec{
+      y   = string.byte('#5',1)-64
+      x   = string.byte('#5',2)-48
+      x2  = string.byte('#5',3)
+      if x2 then x = x*10 + x2-48 end  -- FIXME: what exactly happens here? …
+      tex.print("\\def\\cox{"..(x).."}\\def\\coy{"..(y).."}")
+    }
+  }
+  \placeatthreenumbers
+    {\cox + \csname #1x\endcsname}
+    {\coy + \csname #1y\endcsname}
+    {\llap{#6}#7}
+  \IfValueT{#8}{
+    \expandafter\xdef\csname #8x\endcsname{\cox + \csname #1x\endcsname}
+    \expandafter\xdef\csname #8y\endcsname{\coy + \csname #1y\endcsname}
+  }
+}
+\NewDocumentCommand\placeminipageat{d()O{10cm}m}{
+  \gdef\widthofplaceat{#2}
+  \placeat(#1)
+  {\begin{minipage}{\widthofplaceat}{#3}\end{minipage}}
 }
 \def\placeatthreenumbers#1#2#3{
   \luaexec{
     nr = nr+1
-    dacoordtmp = ((#1-1)*tex.pagewidth/65536/gridnr*1.005)..","..(-(#2-1)*tex.pageheight/65536/gridnr)
+    dacoordtmp = ((#1-1)*tex.pagewidth/65536/gridnrx*1.005)..","..(-(#2-1)*tex.pageheight/65536/gridnry)
     dacoord[nr] = "\\put("..dacoordtmp..")"
     tex.print("\\expandafter\\gdef\\csname command"..(nr).."\\endcsname")}% begin of command definition
   {#3}  %% this is what \command[nr] will contain
 }
-\def\firstof #1,#2{#1}
-\def\secondof #1,#2{#2}
+\def\firstof #1,#2X{#1}
+\def\secondof #1,#2X{#2}
 \let\ifdrawgrid\iftrue
 \luaexec{
   drawgrid = false
-  nr = 0
-  dacoord = {}
-  gridnr = 10
+  nr       = 0
+  dacoord  = {}
+  gridnr   = 10
+  gridnrx  = 10
+  gridnry  = 10
   gridlinewidth = 0.01
 }
-\def\placeatAddToBoxForeground#1{%
-  \AtBeginShipoutBox
-  \edef\placeatrestore{%
-    \vfuzz=\the\vfuzz\relax
-    \vbadness=\the\vbadness\relax
-    \dimen\ltx@zero=\the\dimen\ltx@zero\relax
-  }%
-  \edef\placeatrestorebox{%
-    \ht\AtBeginShipoutBox=\the\ht\AtBeginShipoutBox\relax
-    \dp\AtBeginShipoutBox=\the\dp\AtBeginShipoutBox\relax
-  }%
-  \dimen\ltx@zero=\ht\AtBeginShipoutBox
-  \advance\dimen\ltx@zero by \dp\AtBeginShipoutBox
-  \setbox\AtBeginShipoutBox=\vbox to \dimen\ltx@zero{%
-    \setbox\ltx@zero=\hbox{%
-      \begingroup
-        \placeatrestore
-        #1%
-      \endgroup
-    }%
-    \wd\ltx@zero=0pt\relax
-    \ht\ltx@zero=0pt\relax
-    \dp\ltx@zero=0pt\relax
-    \baselineskip=0pt\relax
-    \lineskip=0pt\relax
-    \lineskiplimit=0pt\relax
-    \unvbox\AtBeginShipoutBox
-    \kern-\dimen\ltx@zero
-    \copy\ltx@zero
-    \kern\dimen\ltx@zero
-  }%
-  \placeatrestore
-  \placeatrestorebox
-}
-
-\def\placeatUpperLeftForeground#1{%
-  \placeatAddToBoxForeground{%
-    \kern-\pdfhorigin\relax
-    \vbox to 0pt{%
-      \kern-\pdfvorigin\relax
-      \begingroup
-      \picture(0,0)\relax
-      \ignorespaces
-      #1%
-      \endpicture
-      \endgroup
-      \vss
-    }%
-  }%
-}
-
 \AtBeginDocument{
   \AtBeginShipout{%
-    \placeatUpperLeftForeground{%
-      \ifdrawgrid \drawgrid \fi
+    \AtBeginShipoutUpperLeftForeground{%
+      \ifdrawgrid\drawgrid\fi
       \luaexec{%
-        for i =1,nr do
+        for i = 1,nr do
           tex.print(dacoord[i].."{\\csname command"..(i).."\\endcsname}")
         end
         nr=0
@@ -126,31 +118,74 @@
   \luatexlatelua{
     pdf_print("q")
     linewidth(gridlinewidth)
-    for i = 1,gridnr do
-      h = i*tex.pageheight/gridnr/65536
-      w = i*tex.pagewidth/gridnr/65536
+    for i = 1,math.max(gridnrx,gridnry) do
+      h = i*tex.pageheight/gridnry/65536
+      w = i*tex.pagewidth/gridnrx/65536
       move(0,-h) line(tex.pagewidth,-h) stroke()
       move(w,0) line(w,-tex.pageheight) stroke()
     end
     pdf_print("Q")
   }
-  \fontsize{8}{10}\selectfont
-  \luaexec{
-    for i=1,gridnr do
-      h = i*tex.pageheight/gridnr/65536
-      w = i*tex.pagewidth/gridnr/65536
-      tex.print("\\put("..(w)..",-7){\\llap{"..i.."}}")
-      tex.print("\\put("..(0)..","..(-h).."){\\char00"..(64+i).."}")
-    end
+  { %% extra grouping to keep font size change local. Going to normalfont seems to make sense. An explicit font for the grid might also be nice. Implementation only upon request.
+    \normalfont
+    \fontsize{8}{10}\selectfont
+    \luaexec{
+      for i=1,math.max(gridnrx,gridnry) do
+        hfac = tex.pageheight/gridnry/65536  %% another empirical factor
+        wfac = tex.pagewidth/gridnrx/65536*1.005  %% another empirical factor
+        h = (i-1)*hfac
+        w = (i-1)*wfac
+        tex.print("\\put("..(w)..",-7){\\rlap{"..i.."}}")
+        if alphanumgrid then
+          tex.print("\\put(0,"..(-h-0.05*hfac).."){\\char00"..(64+i).."}")  %%-- for alphanumeric grid.
+        else
+          tex.print("\\put(0,"..(-h-0.05*hfac).."){"..i.."}")
+        end
+      end
+    }
+  }
+}
+\NewDocumentCommand\placelineat{ou{(}u{,}u{)(}u{,}u{)}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placelineat(#3,-#4,#5,-#6)}
+  }
+}
+\NewDocumentCommand\placearrowat{ou{(}u{,}u{)(}u{,}u{)}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placearrowat(#3,-#4,#5,-#6)}
+  }
+}
+\NewDocumentCommand\placecircleat{ou{(}u{,}u{)}G{3}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#5)}
+  }
+}
+\NewDocumentCommand\placesquareat{ou{(}u{,}u{)}G{3}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placesquareat(#5)}
+  }
+}
+\NewDocumentCommand\placerectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6)}
+  }
+}
+\NewDocumentCommand\placefilledrectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placefilledrectangleat(#3,-#4,#5,-#6)}
   }
 }
 \ExplSyntaxOn
 \keys_define:nn{placeat}{
-  final.code:n           = \directlua{placeat_final = true drawgrid = false},
-  nogrid.code:n          = \let\ifdrawgrid\iffalse,
-  drawgrid.code:n          = \let\ifdrawgrid\iftrue,
-  gridnumber.code:n      = \directlua{gridnr = #1},
-  gridlinewidth.code:n   = \directlua{gridlinewidth = #1}
+  final.code:n           = \luaexec{placeat_final = true} \let\ifdrawgrid\iffalse,
+  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
+  drawgrid.code:n        = \global\let\ifdrawgrid\iftrue,
+  gridnumber.code:n      = \directlua{gridnr = #1 gridnrx = gridnr~gridnry = gridnr},
+  gridnumberx.code:n     = \directlua{gridnrx = #1},
+  gridnumbery.code:n     = \directlua{gridnry = #1},
+  gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
+  alphanumgrid.code:n    = \directlua{alphanumgrid = true},
+  numnumgrid.code:n      = \directlua{alphanumgrid = false}
 }
 \DeclareDocumentCommand\placeatsetup{m}{
   \keys_set:nn{placeat}{#1}
