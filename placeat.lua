@@ -124,6 +124,20 @@ function placesquareat(length)
   stroke()
 end
 
+function placecurveat(x1,y1,x2,y2,x3,y3,x4,y4) -- start point and three numbers. Start is only offset.
+  xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
+  yfac = tex.pageheight/gridnry/65536 -- should both be global!
+  x2 = (x2-x1)*xfac
+  y2 = (y2-y1)*yfac
+  x3 = (x3-x1)*xfac
+  y3 = (y3-y1)*yfac
+  x4 = (x4-x1)*xfac
+  y4 = (y4-y1)*yfac
+  move(0,0)                           -- start
+  curve(x2,-y2,x3,-y3,x4,-y4)       -- coordinates for Bezier curve
+  stroke()
+end
+
 function placerectangleat(x1,y1,x2,y2)
   xfac = tex.pagewidth/gridnrx/65536
   yfac = tex.pageheight/gridnry/65536

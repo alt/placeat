@@ -581,6 +581,11 @@ end
     \luatexlatelua{placesquareat(#5)}
   }
 }
+\NewDocumentCommand\placecurveat{ou{(}u{)(}u{)(}u{)(}u{)}}{
+ \placeat(#3){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecurveat(#3,#4,#5,#6)}
+  }
+}
 \NewDocumentCommand\placerectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
   \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placerectangleat(#3,-#4,#5,-#6)}
@@ -734,6 +739,20 @@ function placesquareat(length)
   line ( length, length)
   line (-length, length)
   line (-length,-length)
+  stroke()
+end
+
+function placecurveat(x1,y1,x2,y2,x3,y3,x4,y4) -- start point and three numbers. Start is only offset.
+  xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
+  yfac = tex.pageheight/gridnry/65536 -- should both be global!
+  x2 = (x2-x1)*xfac
+  y2 = (y2-y1)*yfac
+  x3 = (x3-x1)*xfac
+  y3 = (y3-y1)*yfac
+  x4 = (x4-x1)*xfac
+  y4 = (y4-y1)*yfac
+  move(0,0)                           -- start
+  curve(x2,-y2,x3,-y3,x4,-y4)       -- coordinates for Bezier curve
   stroke()
 end
 

@@ -167,6 +167,11 @@
     \luatexlatelua{placesquareat(#5)}
   }
 }
+\NewDocumentCommand\placecurveat{ou{(}u{)(}u{)(}u{)(}u{)}}{
+ \placeat(#3){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecurveat(#3,#4,#5,#6)}
+  }
+}
 \NewDocumentCommand\placerectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
   \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placerectangleat(#3,-#4,#5,-#6)}
