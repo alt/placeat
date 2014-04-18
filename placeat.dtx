@@ -11,7 +11,7 @@ To produce the package files, run lualatex on placeat.dtx, wich should result in
   placeat.sty  (LaTeX user interface)
   placeat.lua  (Lua package code)
 
-You need an up-to-date TeX Live (2013) to use this package. A full, updated MiKTeX should also work. (Not tested.)
+You need an up-to-date TeX Live (2013) and compilation with LuaLaTeX to use this package. A full, updated MiKTeX should also work. (Not tested.)
 
 For any comments or suggestions, contact me:
 arno dot trautmann at gmx dot de
@@ -59,7 +59,7 @@ ance status ‘maintained’.
 \nopreamble\nopostamble
 \catcode`\@12
 
-%\generate{\file{README.}{\from{placeat.dtx}{readme}}}
+\generate{\file{README.}{\from{placeat.dtx}{readme}}}
 % readme will not be generated until I figured out how to write a file without extension
 
 \ifx\fmtname\nameofplainTeX
@@ -98,9 +98,9 @@ ance status ‘maintained’.
 \placeatsetup{nogrid}
 
 \begin{document}
-\centerline{\fontsize{35}{50}\selectfont placeat}
+\centerline{\fontsize{40}{55}\selectfont placeat}
 
-\centerline{v0.0c}
+\centerline{v0.1a}
 \centerline{\hspace*{2cm} Arno Trautmann}
 \centerline{\href{mailto:arno.trautmann@gmx.de}{arno.trautmann@gmx.de}}
 
@@ -109,6 +109,17 @@ ance status ‘maintained’.
 The package \textsf{placeat} offers the command \verb|\placeat(2,5){}| which places arbitrary content freely on any page. It is mainly thought for use with the beamer class but may also be used with any other \LaTeX\ class. This package requires Lua\LaTeX; don't try it with any other \TeX\ flavour, it just won't work.
 \end{abstract}
 
+\begin{figure}[b]
+\small\noindent
+\fbox{\parbox{.97\textwidth}{
+This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
+modified under the conditions of the LaTeX Project Public License, either version 1.3c
+of this license or (at your option) any later version. This work has the LPPL maintenance status ‘maintained’. Whoever notes the face in the title gets a cookie when we meet.}}
+\end{figure}
+
+\textcolor{red}{\textls{ATTENTION}} This package is in a very preliminary version and released for testing.
+
+\section*{Introduction}
 This is the documentation of the package |placeat|. When you load the package, a grid is drawn on every page of your document to aid you at placing stuff where you want it to be. This mainly makes sense in presentations, but might be used in any document. The main macro of this package \verb|\placeat...{}| offers several ways to use it:
 \begin{verbatim}
 \placeat<D4>{some content}
@@ -116,7 +127,7 @@ This is the documentation of the package |placeat|. When you load the package, a
 \placeat{3}{4}{some content}
 \end{verbatim}
 
-To deactivate the grid, use the package option \verb|nogrid| or use the command \verb|\placeatsetup{nogrid}|. There are also some other commands that allow you to draw simple sketches which might be useful in presentations, too, like arrows, circles etc., but no fancy stuff.
+To deactivate the grid, use the setup command \verb|\placeatsetup{nogrid}|. There are also some other commands that allow you to draw simple sketches which might be useful in presentations, too, like arrows, circles etc., but no fancy stuff.
 
 \vspace{1cm}
 
@@ -124,15 +135,6 @@ To deactivate the grid, use the package option \verb|nogrid| or use the command 
 
 If you have any suggestions or comments, just drop me a mail, I’ll be happy to get any response! The latest source code is hosted on github – Feel free to comment or report bugs there, to fork, pull, etc.:
 \url{https://github.com/alt/placeat}\\
-
-\vfill
-
-\small\noindent
-\fbox{\parbox{.97\textwidth}{
-This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
-modified under the conditions of the LaTeX Project Public License, either version 1.3c
-of this license or (at your option) any later version. This work has the LPPL maintenance status ‘maintained’. Whoever notes the face in the title gets a cookie when we meet.}}
-\vspace*{1cm}
 
 \newpage
 \tableofcontents
@@ -223,13 +225,28 @@ The horizontal and vertical gridnumbers can be adjusted independently:
 }
 \end{verbatim}
 
-
-
 The grid can be deactivated by the document options \verb|final| or \verb|nogrid| and re-activated by the option \verb|drawgrid| in the setup macro:
 \begin{verbatim}
 \placeatsetup{nogrid}
 \placeatsetup{drawgrid}
 \end{verbatim}
+
+\subsection{Offsetting}
+You can choose the zero point of the grid by setting the options
+\begin{verbatim}
+\placeatsetup{
+  offsetx = 2
+  offsety = -1
+}
+\end{verbatim}
+The grid and placement are adapted correspondingly. If you are a C-head thinking that everything should start with 0 instead of 1, you can call
+\begin{verbatim}
+\placeatsetup{
+  startzero
+}
+\end{verbatim}
+which corresponds to |offsetx = 1,offsety = 1| so that the upper right corner has coordinates |(0,0)| instead of |(1,1)|.
+
 
 \section{Drawing simple forms}
 This package also allows to draw simple forms like arrows and circles, to support the user e.\,g. when creating presentations. A single line is drawn by calling
@@ -246,12 +263,13 @@ placelineat(x1,y1)(x2,y2) & Draws a single line pointing from |(x1,y1)| to |(x2,
 placearrowat(x1,y1)(x2,y2) & As the line, but with an arrowhead at the end.\\\midrule
 placecircleat(x,y)\{r\}  & Draws a circle at position |(x,y)| with diameter |r|. If omitted, |r| will default to |3|. The diameter is not scaled to the same scale as the coordinates, and most likely you have to test what size fits. Start with~5, it's a nice number. Right now, the circle is not really a circle, but slightly deformed as we only have cubic splines. May change to something better.\\\midrule
 placesquareat(x,y)\{r\} & Draws a square with center at |(x,y)| and side lingth |r|. If omitted, |r| will default to |3|.\\\midrule
-placerectangleat(x1,y1)(x2,y2) & draws a rectangle from the (upper left) corner |(x1,y1)| to the (lower right) corner |(x2,y2)|.
+placerectangleat(x1,y1)(x2,y2) & draws a rectangle from the (upper left) corner |(x1,y1)| to the (lower right) corner |(x2,y2)|.\\\midrule
+placefilledrectangleat(x1,y1)(x2,y2) & draws a filled rectangle.
 \\\bottomrule
 \end{tabu}
 \end{table}
 
-Missing are eliptical shapes, maybe rounded corners for the rectangles and maybe some funny stuff.
+Missing are eliptical shapes, maybe rounded corners for the rectangles and maybe some funny stuff.\footnote{Yes, I \emph{will} add a penis-shape macro, but that will not be documented explicitely.}
 
 \subsection{Colored forms}
 Every command of the ones listed above takes an optional argument that allows the specification of a color. This is based on the \textsc{xcolor}, so all colors known by that package are possible:
@@ -260,6 +278,7 @@ Every command of the ones listed above takes an optional argument that allows th
 \placecircleat[blue](5,5)
 \placearrowat[green!50!yellow](6,5)(8,5)
 \placerectangleat[red!25!black](8,4)(9,6)
+\placefilledrectangleat[blue!25!red](8.5,4.5)(8.75,5.6)
 \end{verbatim}
 
 By now, it is not possible to specify an rgb code or similar. If you want a very special color that is not defined in the \textsc{xcolor} package, just define it by yourself. However, as shown above, it is possible to mix colors using the \verb|red!50!green| syntax, which is very flexible and should cover normal every day use.
@@ -317,6 +336,9 @@ A list of things I would like to have solved by some time:
 \catcode`\•13
 \let•\item
 \begin{itemize}
+• allow the |wave| color model as it is very very cool
+• placing stuff at every page or reuse stuff at all
+• allow course placing (put at upper left corner, put at left side etc.) for presentations
 • verbatim in placeat
 • drawing maybe based on metapost instead of pdf drawing
 \end{itemize}
@@ -341,7 +363,7 @@ That's it for the documentation, have fun, and\vspace{2cm}
 
 \begin{luacode}
 for i = 1,20 do
-  tex.print("\\placecircleat[red](10,6){"..(2*i).."}")
+  tex.print("\\placecircleat[blue](12,6){"..(2*i).."}")
 end
 \end{luacode}
 
@@ -360,12 +382,12 @@ end
 % The Lua file is not found by using a simple |dofile("placeat.lua")| call, but we have to use kpse's |find_file|.
 %    \begin{macrocode}
 \ProvidesPackage{placeat}%
-  [2014/04/14 v0.0c placeat package]
+  [2014/04/18 v0.1a absolute content positioning]
 \RequirePackage{luatexbase}
 \RequirePackage{luacode}
 \RequirePackage{atbegshi}
 \RequirePackage{xparse}
-\directlua{dofile(kpse.find_file("placeat.lua"))}
+\directlua{dofile(kpse.find_file("placeat.lua",'lua'))}
 %    \end{macrocode}
 % \subsection{User Commands}
 % The main command \verb|\placeat|. There are several ways to use it, so we define a wrapper macro that is only for the user interface. Nice separation of interface and code. But actually, both are quite hard interwoven and it's not really clear at any time what happens. However, it works most of the time.
@@ -451,11 +473,13 @@ end
 %    \end{macrocode}
 % \subsection{Helper Macros}
 % The real stuff is done in the macro \verb|\placeatthreenumbers| which takes exactly three arguments defining the position of the content. The content is stored in a macro that is defined using Lua code, and the position is also calculated by Lua code. Everything is put together into a Lua-\TeX-bastard and surprisingly works stable as far as I can tell.
+% 
+% This place is also where the offset and scaling happens.
 %    \begin{macrocode}
 \def\placeatthreenumbers#1#2#3{
   \luaexec{
     nr = nr+1
-    dacoordtmp = ((#1-1)*tex.pagewidth/65536/gridnrx*1.005)..","..(-(#2-1)*tex.pageheight/65536/gridnry)
+    dacoordtmp = ((#1-1+offsetx)*tex.pagewidth/65536/gridnrx*1.005)..","..(-(#2-1+offsety)*tex.pageheight/65536/gridnry)
     dacoord[nr] = "\\put("..dacoordtmp..")"
     tex.print("\\expandafter\\gdef\\csname command"..(nr).."\\endcsname")}% begin of command definition
   {#3}  %% this is what \command[nr] will contain
@@ -477,6 +501,8 @@ end
   gridnrx  = 10
   gridnry  = 10
   gridlinewidth = 0.01
+  offsetx  = 0
+  offsety  = 0
 } 
 %    \end{macrocode}
 % Now the code that does the actual work here. We use Heiko Oberdiek's package \textsf{atbegshi} with the very useful macros \verb|\AtBeginShipout| and \verb|\AtBeginShipoutUpperLeftForeground|. Using these, we are free from any context of where the code is written, it is always executed at the shipout and therefore absolute positioning is possible.
@@ -514,16 +540,16 @@ end
 %% would also be nice to maybe adapt the fontsize to the grid size
     \normalfont\fontsize{8}{10}\selectfont
     \luaexec{
-      for i=1,math.max(gridnrx,gridnry) do
+      for i=1,math.max(gridnrx+offsetx,gridnry+offsety) do
         hfac = tex.pageheight/gridnry/65536  %% another empirical factor
         wfac = tex.pagewidth/gridnrx/65536*1.005  %% another empirical factor
         h = (i-1)*hfac
         w = (i-1)*wfac
-        tex.print("\\put("..(w)..",-7){\\rlap{"..i.."}}")
+        tex.print("\\put("..(w)..",-7){\\rlap{"..(i-offsetx).."}}")
         if alphanumgrid then
-          tex.print("\\put(0,"..(-h-0.05*hfac).."){\\char00"..(64+i).."}")  %%-- for alphanumeric grid.
+          tex.print("\\put(0,"..(-h-0.05*hfac).."){\\char00"..(64+i-offsety).."}")  %%-- for alphanumeric grid.
         else
-          tex.print("\\put(0,"..(-h-0.05*hfac).."){"..i.."}")
+          tex.print("\\put(0,"..(-h-0.05*hfac).."){"..(i-offsety).."}")
         end
       end
     }
@@ -573,15 +599,18 @@ end
 %    \begin{macrocode}
 \ExplSyntaxOn
 \keys_define:nn{placeat}{
+  alphanumgrid.code:n    = \directlua{alphanumgrid = true},
   final.code:n           = \luaexec{placeat_final = true} \let\ifdrawgrid\iffalse,
-  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
   drawgrid.code:n        = \global\let\ifdrawgrid\iftrue,
   gridnumber.code:n      = \directlua{gridnr = #1 gridnrx = gridnr~gridnry = gridnr},
   gridnumberx.code:n     = \directlua{gridnrx = #1},
   gridnumbery.code:n     = \directlua{gridnry = #1},
   gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
-  alphanumgrid.code:n    = \directlua{alphanumgrid = true},
-  numnumgrid.code:n      = \directlua{alphanumgrid = false}
+  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
+  numnumgrid.code:n      = \directlua{alphanumgrid = false},
+  offsetx.code:n         = \directlua{offsetx = #1},
+  offsety.code:n         = \directlua{offsety = #1},
+  startzero.code:n       = \directlua{offsetx = 1 offsety = 1}
 }
 \DeclareDocumentCommand\placeatsetup{m}{
   \keys_set:nn{placeat}{#1}

@@ -13,12 +13,12 @@
 %% of this license or (at your option) any later version. This work has the LPPL mainten-
 %% ance status ‘maintained’.
 \ProvidesPackage{placeat}%
-  [2014/04/14 v0.0c placeat package]
+  [2014/04/18 v0.1a absolute content positioning]
 \RequirePackage{luatexbase}
 \RequirePackage{luacode}
 \RequirePackage{atbegshi}
 \RequirePackage{xparse}
-\directlua{dofile(kpse.find_file("placeat.lua"))}
+\directlua{dofile(kpse.find_file("placeat.lua",'lua'))}
 \NewDocumentCommand\placeat{ggd()d<>O{}mo}{
   \IfValueT{#1}{                        %% two coordinates in { }{ } pair.
     \IfValueT{#2}{                      %% if second argument is not given, everything breaks. not nice.
@@ -84,7 +84,7 @@
 \def\placeatthreenumbers#1#2#3{
   \luaexec{
     nr = nr+1
-    dacoordtmp = ((#1-1)*tex.pagewidth/65536/gridnrx*1.005)..","..(-(#2-1)*tex.pageheight/65536/gridnry)
+    dacoordtmp = ((#1-1+offsetx)*tex.pagewidth/65536/gridnrx*1.005)..","..(-(#2-1+offsety)*tex.pageheight/65536/gridnry)
     dacoord[nr] = "\\put("..dacoordtmp..")"
     tex.print("\\expandafter\\gdef\\csname command"..(nr).."\\endcsname")}% begin of command definition
   {#3}  %% this is what \command[nr] will contain
@@ -100,6 +100,8 @@
   gridnrx  = 10
   gridnry  = 10
   gridlinewidth = 0.01
+  offsetx  = 0
+  offsety  = 0
 }
 \AtBeginDocument{
   \AtBeginShipout{%
@@ -127,19 +129,19 @@
     pdf_print("Q")
   }
   { %% extra grouping to keep font size change local. Going to normalfont seems to make sense. An explicit font for the grid might also be nice. Implementation only upon request.
-    \normalfont
-    \fontsize{8}{10}\selectfont
+%% would also be nice to maybe adapt the fontsize to the grid size
+    \normalfont\fontsize{8}{10}\selectfont
     \luaexec{
-      for i=1,math.max(gridnrx,gridnry) do
+      for i=1,math.max(gridnrx+offsetx,gridnry+offsety) do
         hfac = tex.pageheight/gridnry/65536  %% another empirical factor
         wfac = tex.pagewidth/gridnrx/65536*1.005  %% another empirical factor
         h = (i-1)*hfac
         w = (i-1)*wfac
-        tex.print("\\put("..(w)..",-7){\\rlap{"..i.."}}")
+        tex.print("\\put("..(w)..",-7){\\rlap{"..(i-offsetx).."}}")
         if alphanumgrid then
-          tex.print("\\put(0,"..(-h-0.05*hfac).."){\\char00"..(64+i).."}")  %%-- for alphanumeric grid.
+          tex.print("\\put(0,"..(-h-0.05*hfac).."){\\char00"..(64+i-offsety).."}")  %%-- for alphanumeric grid.
         else
-          tex.print("\\put(0,"..(-h-0.05*hfac).."){"..i.."}")
+          tex.print("\\put(0,"..(-h-0.05*hfac).."){"..(i-offsety).."}")
         end
       end
     }
@@ -177,15 +179,18 @@
 }
 \ExplSyntaxOn
 \keys_define:nn{placeat}{
+  alphanumgrid.code:n    = \directlua{alphanumgrid = true},
   final.code:n           = \luaexec{placeat_final = true} \let\ifdrawgrid\iffalse,
-  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
   drawgrid.code:n        = \global\let\ifdrawgrid\iftrue,
   gridnumber.code:n      = \directlua{gridnr = #1 gridnrx = gridnr~gridnry = gridnr},
   gridnumberx.code:n     = \directlua{gridnrx = #1},
   gridnumbery.code:n     = \directlua{gridnry = #1},
   gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
-  alphanumgrid.code:n    = \directlua{alphanumgrid = true},
-  numnumgrid.code:n      = \directlua{alphanumgrid = false}
+  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
+  numnumgrid.code:n      = \directlua{alphanumgrid = false},
+  offsetx.code:n         = \directlua{offsetx = #1},
+  offsety.code:n         = \directlua{offsety = #1},
+  startzero.code:n       = \directlua{offsetx = 1 offsety = 1}
 }
 \DeclareDocumentCommand\placeatsetup{m}{
   \keys_set:nn{placeat}{#1}
