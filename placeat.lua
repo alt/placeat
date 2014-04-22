@@ -42,11 +42,15 @@ function curve(p11,p12,p21,p22,p31,p32)
               p3[1], p3[2], "c")
 end
 
-function linewidth (w)
+function linewidth(w)
   pdf_print(w,"w")
 end
 
-function stroke ()
+function fill()
+  pdf_print("f")
+end
+
+function stroke()
   pdf_print("S")
 end
 
@@ -89,9 +93,10 @@ function placearrowat(x1,y1,x2,y2)
 end
 
 -- better circle-approximation by using quarter circles, according to wikipedia article about Bézier curves
-function placecircleat(radius)
+function placecircleat(radius,filled)
   local k = 0.55228
   local P0,P1,P2,P3
+  radius = radius * 59.5 -- next arbitrary scale factor; the circle has radius "1" in x-units
 
   P0 = {radius,0}          P1 = {radius,radius*k}
   P2 = {radius*k,radius}   P3 = {0,radius}
@@ -112,6 +117,9 @@ function placecircleat(radius)
   P2 = {radius*k,-radius}  P3 = {0,-radius}
 
   move  (P0[1],P0[2]) curve (P1,P2,P3)
+  if filled then
+    fill()
+  end
   stroke()
 end
 
@@ -133,12 +141,12 @@ function placecurveat(x1,y1,x2,y2,x3,y3,x4,y4) -- start point and three numbers.
   y3 = (y3-y1)*yfac
   x4 = (x4-x1)*xfac
   y4 = (y4-y1)*yfac
-  move(0,0)                           -- start
+  move(0,0)                         -- start
   curve(x2,-y2,x3,-y3,x4,-y4)       -- coordinates for Bezier curve
   stroke()
 end
 
-function placerectangleat(x1,y1,x2,y2)
+function placerectangleat(x1,y1,x2,y2,filled)
   xfac = tex.pagewidth/gridnrx/65536
   yfac = tex.pageheight/gridnry/65536
   x2 = (x2-x1)*xfac
@@ -148,19 +156,10 @@ function placerectangleat(x1,y1,x2,y2)
   line(x2,y2)
   line(0,y2)
   line(0,0)
+  if filled then
+    fill()
+  end
   stroke()
-end
-
-function placefilledrectangleat(x1,y1,x2,y2)
-  xfac = tex.pagewidth/gridnrx/65536
-  yfac = tex.pageheight/gridnry/65536/1.0035  -- well, yes. Another random factor. lalala
-  x2 = (x2-x1)*xfac
-  y2 = (y2-y1)*yfac
-  linewidth(y2)
-  move(0,y2/2)
-  line(x2,y2/2)
-  stroke()
-  linewidth(1)
 end
 -- 
 --  End of File `placeat.lua'.

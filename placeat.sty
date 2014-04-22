@@ -162,6 +162,11 @@
     \luatexlatelua{placecircleat(#5)}
   }
 }
+\NewDocumentCommand\placefilledcircleat{ou{(}u{,}u{)}G{3}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#5,true)}
+  }
+}
 \NewDocumentCommand\placesquareat{ou{(}u{,}u{)}G{3}}{
   \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placesquareat(#5)}
@@ -179,7 +184,7 @@
 }
 \NewDocumentCommand\placefilledrectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
   \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placefilledrectangleat(#3,-#4,#5,-#6)}
+    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6,true)}
   }
 }
 \ExplSyntaxOn
@@ -191,6 +196,7 @@
   gridnumberx.code:n     = \directlua{gridnrx = #1},
   gridnumbery.code:n     = \directlua{gridnry = #1},
   gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
+  linewidth.code:n       = {\placeat(1,1){\luatexlatelua{linewidth(#1)}}},  %% FIXME: this is a very nasty hack to implement user's choice of linewidth!
   nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
   numnumgrid.code:n      = \directlua{alphanumgrid = false},
   offsetx.code:n         = \directlua{offsetx = #1},

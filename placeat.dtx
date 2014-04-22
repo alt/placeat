@@ -199,16 +199,11 @@ For floating environments, even if they don't float (that would be stupid, would
 Here, the third, argument is optional and specifies the width of the minipage. If not given, it will default to 10cm, which should be wide enough to contain anything you ever want to set using \verb|placeat|.
 
 \subsection{User Options}
-Some of this package's features can be adjusted. For this, you can either pass the options to the package at loading time:
-\begin{verbatim}
-\usepackage[final]{placeat}
-\end{verbatim}
-Or you use, at any time in the document, the command
+Some of this package's features can be adjusted at any time in the document with the command
 \begin{verbatim}
 \placeatsetup{}
 \end{verbatim}
-which takes all of the package options and some more that make no sense at package loading time.
-\textcolor{red}{ATTENTION:} Actually, so far the package option interface does not work, but \verb|\placeatsetup| is fine.
+Some of the options only make sense when used in the preamble, others only have a result when used in the text. However, none should result in an error, so feel free to do whatever nonesens you want to.
 
 \subsection{The Grid}
 If the number of grid lines does not suit you (there are ten horizontally and vertically), you can increase or decrease the number by 
@@ -269,10 +264,16 @@ placefilledrectangleat(x1,y1)(x2,y2) & draws a filled rectangle.
 \end{tabu}
 \end{table}
 
-Missing are eliptical shapes, maybe rounded corners for the rectangles and maybe some funny stuff.\footnote{Yes, I \emph{will} add a penis-shape macro, but that will not be documented explicitely.}
+You can change the linewidth and therefore the thickness of lines with the simple call
+\begin{verbatim}
+\placeatsetup{linewidth=5}
+\end{verbatim}
+Default is 1, I have no idea in which unit, but it is a very nice thickness, I think. You can change the thickness any time and as often as you want.
+
+Missing are eliptical shapes, maybe rounded corners for the rectangles and maybe some funny stuff.\footnote{Yes, I \emph{will} add a penis-shape macro, but that will not be documented explicitely.} The arrowheads need a lot of work, too, of course.
 
 \subsection{Colored forms}
-Every command of the ones listed above takes an optional argument that allows the specification of a color. This is based on the \textsc{xcolor}, so all colors known by that package are possible:
+You need to load the \textsc{xcolor} package to use colors.\footnote{Why is it not required in the \textsc{placeat} package? Because you might want to specify package options and that may collide with the loading here. However, every sane document working with color requires the package by default.} Every command of the ones listed above takes an optional argument that allows the specification of a color. This is based on the \textsc{xcolor}, so all colors known by that package are possible:
 
 \begin{verbatim}
 \placecircleat[blue](5,5)
@@ -356,14 +357,14 @@ Suggestions. I'm open to extend the functionality. Just tell me what you want an
 That's it for the documentation, have fun, and\vspace{2cm}
 
 \placeat(5,7){\Huge\rotatebox{45}{Happy \TeX ing!}}[happy]
-\placecircleat[red](4,4.5){20}
-\placecircleat[green](9,4.5){20}
-\placecircleat[blue](4,7.5){20}
-\placecircleat[orange](9,7.5){20}
+\placecircleat[red](4,4.5){.2}
+\placecircleat[green](9,4.5){.2}
+\placecircleat[blue](4,7.5){.2}
+\placecircleat[orange](9,7.5){.2}
 
 \begin{luacode}
 for i = 1,20 do
-  tex.print("\\placecircleat[blue](12,6){"..(2*i).."}")
+  tex.print("\\placecircleat[blue](12,6){"..(0.05*i).."}")
 end
 \end{luacode}
 
@@ -576,6 +577,11 @@ end
     \luatexlatelua{placecircleat(#5)}
   }
 }
+\NewDocumentCommand\placefilledcircleat{ou{(}u{,}u{)}G{3}}{
+  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#5,true)}
+  }
+}
 \NewDocumentCommand\placesquareat{ou{(}u{,}u{)}G{3}}{
   \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placesquareat(#5)}
@@ -593,7 +599,7 @@ end
 }
 \NewDocumentCommand\placefilledrectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
   \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placefilledrectangleat(#3,-#4,#5,-#6)}
+    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6,true)}
   }
 }
 %    \end{macrocode}
@@ -611,6 +617,7 @@ end
   gridnumberx.code:n     = \directlua{gridnrx = #1},
   gridnumbery.code:n     = \directlua{gridnry = #1},
   gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
+  linewidth.code:n       = {\placeat(1,1){\luatexlatelua{linewidth(#1)}}},  %% FIXME: this is a very nasty hack to implement user's choice of linewidth!
   nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
   numnumgrid.code:n      = \directlua{alphanumgrid = false},
   offsetx.code:n         = \directlua{offsetx = #1},
@@ -660,11 +667,15 @@ function curve(p11,p12,p21,p22,p31,p32)
               p3[1], p3[2], "c")
 end
 
-function linewidth (w)
+function linewidth(w)
   pdf_print(w,"w")
 end
 
-function stroke ()
+function fill()
+  pdf_print("f")
+end
+
+function stroke()
   pdf_print("S")
 end
 
@@ -707,9 +718,10 @@ function placearrowat(x1,y1,x2,y2)
 end
 
 -- better circle-approximation by using quarter circles, according to wikipedia article about Bézier curves
-function placecircleat(radius)
+function placecircleat(radius,filled)
   local k = 0.55228
   local P0,P1,P2,P3
+  radius = radius * 59.5 -- next arbitrary scale factor; the circle has radius "1" in x-units
   
   P0 = {radius,0}          P1 = {radius,radius*k}
   P2 = {radius*k,radius}   P3 = {0,radius}
@@ -730,6 +742,9 @@ function placecircleat(radius)
   P2 = {radius*k,-radius}  P3 = {0,-radius}
 
   move  (P0[1],P0[2]) curve (P1,P2,P3)
+  if filled then
+    fill()
+  end
   stroke()
 end
 
@@ -751,12 +766,12 @@ function placecurveat(x1,y1,x2,y2,x3,y3,x4,y4) -- start point and three numbers.
   y3 = (y3-y1)*yfac
   x4 = (x4-x1)*xfac
   y4 = (y4-y1)*yfac
-  move(0,0)                           -- start
+  move(0,0)                         -- start
   curve(x2,-y2,x3,-y3,x4,-y4)       -- coordinates for Bezier curve
   stroke()
 end
 
-function placerectangleat(x1,y1,x2,y2)
+function placerectangleat(x1,y1,x2,y2,filled)
   xfac = tex.pagewidth/gridnrx/65536
   yfac = tex.pageheight/gridnry/65536
   x2 = (x2-x1)*xfac
@@ -766,19 +781,10 @@ function placerectangleat(x1,y1,x2,y2)
   line(x2,y2)
   line(0,y2)
   line(0,0)
+  if filled then
+    fill()
+  end
   stroke()
-end
-
-function placefilledrectangleat(x1,y1,x2,y2)
-  xfac = tex.pagewidth/gridnrx/65536
-  yfac = tex.pageheight/gridnry/65536/1.0035  -- well, yes. Another random factor. lalala
-  x2 = (x2-x1)*xfac
-  y2 = (y2-y1)*yfac
-  linewidth(y2)
-  move(0,y2/2)
-  line(x2,y2/2)
-  stroke()
-  linewidth(1)
 end
 %    \end{macrocode}
 % \Finale
