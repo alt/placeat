@@ -27,7 +27,7 @@ function move (p1,p2)
   end
 end
 
-function line (p1,p2)
+function line(p1,p2)
   pdf_print(p1,p2,"l")
 end
 
@@ -68,7 +68,7 @@ function placelineat(x1,y1,x2,y2)
   xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
   yfac = tex.pageheight/gridnry/65536 -- should both be global!
   xar = (x2-x1)*xfac                  -- end point of the arrow
-  yar = (y2-y1)*yfac                  --
+  yar = (y1-y2)*yfac                  --
   move(0,0)                           -- start
   line(xar,yar)                       -- draw main line
   stroke()
@@ -78,7 +78,7 @@ function placearrowat(x1,y1,x2,y2)
   xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
   yfac = tex.pageheight/gridnry/65536 -- should both be global!
   xar = (x2-x1)*xfac                  -- end point of the arrow
-  yar = (y2-y1)*yfac                  --
+  yar = (y1-y2)*yfac                  --
   parx = xar/math.sqrt(xar^2+yar^2)   -- direction of the arrow
   pary = yar/math.sqrt(xar^2+yar^2)   --
   perpx = -pary                       -- perp of the arrow direction
@@ -93,30 +93,27 @@ function placearrowat(x1,y1,x2,y2)
 end
 
 -- better circle-approximation by using quarter circles, according to wikipedia article about Bézier curves
-function placecircleat(radius,filled)
-  local k = 0.55228
+-- k = 1 gives a circle, everything else something else …
+function placecircleat(r,k,filled)
   local P0,P1,P2,P3
-  radius = radius * 59.5 -- next arbitrary scale factor; the circle has radius "1" in x-units
+  r = r * 59.5 -- next arbitrary scale factor; the circle has radius "1" in x-units
+  local rk = 0.55228*r*k
 
-  P0 = {radius,0}          P1 = {radius,radius*k}
-  P2 = {radius*k,radius}   P3 = {0,radius}
+  P0 = {r,0}
+  move  (P0[1],P0[2])
 
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
+  P1 = {r,rk}   P2 = {rk,r}   P3 = {0,r}
+  curve (P1,P2,P3)
 
-  P0 = {-radius,0}         P1 = {-radius,radius*k}
-  P2 = {-radius*k,radius}  P3 = {0,radius}
+  P1 = {-rk,r}  P2 = {-r,rk}  P3 = {-r,0}
+  curve (P1,P2,P3)
 
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
+  P1 = {-r,-rk} P2 = {-rk,-r} P3 = {0,-r}
+  curve (P1,P2,P3)
 
-  P0 = {-radius,0}         P1 = {-radius,-radius*k}
-  P2 = {-radius*k,-radius} P3 = {0,-radius}
+  P1 = {rk,-r}  P2 = {r,-rk}  P3 = {r,0}
+  curve (P1,P2,P3)
 
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
-
-  P0 = {radius,0}          P1 = {radius,-radius*k}
-  P2 = {radius*k,-radius}  P3 = {0,-radius}
-
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
   if filled then
     fill()
   end
@@ -150,7 +147,7 @@ function placerectangleat(x1,y1,x2,y2,filled)
   xfac = tex.pagewidth/gridnrx/65536
   yfac = tex.pageheight/gridnry/65536
   x2 = (x2-x1)*xfac
-  y2 = (y2-y1)*yfac
+  y2 = (y1-y2)*yfac
   move(0,0)
   line(x2,0)
   line(x2,y2)

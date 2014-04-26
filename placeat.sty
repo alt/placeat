@@ -120,9 +120,11 @@
   \luatexlatelua{
     pdf_print("q")
     linewidth(gridlinewidth)
+    local factorh = tex.pageheight/gridnry/65536
+    local factorw = tex.pagewidth/gridnrx/65536
     for i = 1,math.max(gridnrx,gridnry) do
-      h = i*tex.pageheight/gridnry/65536
-      w = i*tex.pagewidth/gridnrx/65536
+      h = i*factorh
+      w = i*factorw
       move(0,-h) line(tex.pagewidth,-h) stroke()
       move(w,0) line(w,-tex.pageheight) stroke()
     end
@@ -133,7 +135,7 @@
     \normalfont\fontsize{8}{10}\selectfont
     \luaexec{
       for i=1,math.max(gridnrx+offsetx,gridnry+offsety) do
-        hfac = tex.pageheight/gridnry/65536  %% another empirical factor
+        hfac = tex.pageheight/gridnry/65536
         wfac = tex.pagewidth/gridnrx/65536*1.005  %% another empirical factor
         h = (i-1)*hfac
         w = (i-1)*wfac
@@ -147,44 +149,50 @@
     }
   }
 }
-\NewDocumentCommand\placelineat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placelineat(#3,-#4,#5,-#6)}
+\NewDocumentCommand\placelineat{od()d()}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placelineat(#2,#3)}
   }
 }
-\NewDocumentCommand\placearrowat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placearrowat(#3,-#4,#5,-#6)}
+\NewDocumentCommand\placearrowat{od()d()}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placearrowat(#2,#3)}
   }
 }
-\NewDocumentCommand\placecircleat{ou{(}u{,}u{)}G{3}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placecircleat(#5)}
+\NewDocumentCommand\placecircleat{od()D(){.3}}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#3,1)}
   }
 }
-\NewDocumentCommand\placefilledcircleat{ou{(}u{,}u{)}G{3}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placecircleat(#5,true)}
+\NewDocumentCommand\placefilledcircleat{od()D(){.3}}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#3,1,true)}
   }
 }
-\NewDocumentCommand\placesquareat{ou{(}u{,}u{)}G{3}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placesquareat(#5)}
+\NewDocumentCommand\placesquareat{od()G{3}}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placesquareat(#3)}
   }
 }
-\NewDocumentCommand\placecurveat{ou{(}u{)(}u{)(}u{)(}u{)}}{
- \placeat(#3){\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placecurveat(#3,#4,#5,#6)}
+\NewDocumentCommand\placecurveat{od()d()d()d()}{
+ \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecurveat(#2,#3,#4,#5)}
   }
 }
-\NewDocumentCommand\placerectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6)}
+\NewDocumentCommand\placerectangleat{O{black}d()d()}{
+  \placeat(#2){\ignorespaces\color{#1}%
+    \luatexlatelua{placerectangleat(#2,#3)}
   }
 }
-\NewDocumentCommand\placefilledrectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6,true)}
+\NewDocumentCommand\placefilledrectangleat{O{black}d()d()}{
+  \placeat(#2){\ignorespaces\color{#1}%
+    \luatexlatelua{placerectangleat(#2,#3,true)}
+  }
+}
+\NewDocumentCommand\placeroundedat{sO{black}d()D(){0.1}D<>{1.5}}{
+  \placeat(#3){\ignorespaces\color{#2}%
+    \IfBooleanTF{#1}{\luatexlatelua{placecircleat(#4,#5,true)}}%
+                    {\luatexlatelua{placecircleat(#4,#5)}}
   }
 }
 \ExplSyntaxOn

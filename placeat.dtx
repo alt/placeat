@@ -4,7 +4,7 @@
 \iffalse
 %</driver>
 %<*readme>
-This is the README file of the placeat package. The package provides several commands to place content at an arbitrary position of the current page in any document. For orientation, a grid is drawn. Simple graphical elements like arrows and circles can be easily drawn and positioned.
+This is the README file of the placeat package. The package provides several commands to place content at an arbitrary position of the current page in any document. For orientation, a grid is drawn. Simple graphical elements like arrows and circles can easily be drawn and positioned.
 
 To produce the package files, run lualatex on placeat.dtx, wich should result in the creation of the following files:
   placeat.pdf  (documentation)
@@ -529,9 +529,11 @@ end
   \luatexlatelua{
     pdf_print("q")
     linewidth(gridlinewidth)
+    local factorh = tex.pageheight/gridnry/65536
+    local factorw = tex.pagewidth/gridnrx/65536
     for i = 1,math.max(gridnrx,gridnry) do
-      h = i*tex.pageheight/gridnry/65536
-      w = i*tex.pagewidth/gridnrx/65536
+      h = i*factorh
+      w = i*factorw
       move(0,-h) line(tex.pagewidth,-h) stroke()
       move(w,0) line(w,-tex.pageheight) stroke()
     end
@@ -542,7 +544,7 @@ end
     \normalfont\fontsize{8}{10}\selectfont
     \luaexec{
       for i=1,math.max(gridnrx+offsetx,gridnry+offsety) do
-        hfac = tex.pageheight/gridnry/65536  %% another empirical factor
+        hfac = tex.pageheight/gridnry/65536
         wfac = tex.pagewidth/gridnrx/65536*1.005  %% another empirical factor
         h = (i-1)*hfac
         w = (i-1)*wfac
@@ -562,44 +564,50 @@ end
 % 
 % I try to provide a basic set of stuff that might be useful. The \TeX\ interface implementation might change, but for now it is done with xparse instead of a much more saner simple |\def|. We will see where this will head to. First, there is an arrow, whose head looks very bad. I don't know how to fix this yet. Then there are circle, square and rectangle. 
 %    \begin{macrocode}
-\NewDocumentCommand\placelineat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placelineat(#3,-#4,#5,-#6)}
+\NewDocumentCommand\placelineat{od()d()}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placelineat(#2,#3)}
   }
 }
-\NewDocumentCommand\placearrowat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placearrowat(#3,-#4,#5,-#6)}
+\NewDocumentCommand\placearrowat{od()d()}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placearrowat(#2,#3)}
   }
 }
-\NewDocumentCommand\placecircleat{ou{(}u{,}u{)}G{3}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placecircleat(#5)}
+\NewDocumentCommand\placecircleat{od()D(){.3}}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#3,1)}
   }
 }
-\NewDocumentCommand\placefilledcircleat{ou{(}u{,}u{)}G{3}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placecircleat(#5,true)}
+\NewDocumentCommand\placefilledcircleat{od()D(){.3}}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecircleat(#3,1,true)}
   }
 }
-\NewDocumentCommand\placesquareat{ou{(}u{,}u{)}G{3}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placesquareat(#5)}
+\NewDocumentCommand\placesquareat{od()G{3}}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placesquareat(#3)}
   }
 }
-\NewDocumentCommand\placecurveat{ou{(}u{)(}u{)(}u{)(}u{)}}{
- \placeat(#3){\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placecurveat(#3,#4,#5,#6)}
+\NewDocumentCommand\placecurveat{od()d()d()d()}{
+ \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+    \luatexlatelua{placecurveat(#2,#3,#4,#5)}
   }
 }
-\NewDocumentCommand\placerectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6)}
+\NewDocumentCommand\placerectangleat{O{black}d()d()}{
+  \placeat(#2){\ignorespaces\color{#1}%
+    \luatexlatelua{placerectangleat(#2,#3)}
   }
 }
-\NewDocumentCommand\placefilledrectangleat{ou{(}u{,}u{)(}u{,}u{)}}{
-  \placeat{#3}{#4}{\ignorespaces\IfValueT{#1}{\color{#1}}%
-    \luatexlatelua{placerectangleat(#3,-#4,#5,-#6,true)}
+\NewDocumentCommand\placefilledrectangleat{O{black}d()d()}{
+  \placeat(#2){\ignorespaces\color{#1}%
+    \luatexlatelua{placerectangleat(#2,#3,true)}
+  }
+}
+\NewDocumentCommand\placeroundedat{sO{black}d()D(){0.1}D<>{1.5}}{
+  \placeat(#3){\ignorespaces\color{#2}%
+    \IfBooleanTF{#1}{\luatexlatelua{placecircleat(#4,#5,true)}}%
+                    {\luatexlatelua{placecircleat(#4,#5)}}
   }
 }
 %    \end{macrocode}
@@ -652,7 +660,7 @@ function move (p1,p2)
   end
 end
 
-function line (p1,p2)
+function line(p1,p2)
   pdf_print(p1,p2,"l")
 end
 
@@ -693,7 +701,7 @@ function placelineat(x1,y1,x2,y2)
   xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
   yfac = tex.pageheight/gridnry/65536 -- should both be global!
   xar = (x2-x1)*xfac                  -- end point of the arrow
-  yar = (y2-y1)*yfac                  -- 
+  yar = (y1-y2)*yfac                  -- 
   move(0,0)                           -- start
   line(xar,yar)                       -- draw main line
   stroke()
@@ -703,7 +711,7 @@ function placearrowat(x1,y1,x2,y2)
   xfac = tex.pagewidth/gridnrx/65536  -- factors to convert given number to absolute coordinates
   yfac = tex.pageheight/gridnry/65536 -- should both be global!
   xar = (x2-x1)*xfac                  -- end point of the arrow
-  yar = (y2-y1)*yfac                  -- 
+  yar = (y1-y2)*yfac                  -- 
   parx = xar/math.sqrt(xar^2+yar^2)   -- direction of the arrow
   pary = yar/math.sqrt(xar^2+yar^2)   --
   perpx = -pary                       -- perp of the arrow direction
@@ -718,30 +726,27 @@ function placearrowat(x1,y1,x2,y2)
 end
 
 -- better circle-approximation by using quarter circles, according to wikipedia article about Bézier curves
-function placecircleat(radius,filled)
-  local k = 0.55228
+-- k = 1 gives a circle, everything else something else …
+function placecircleat(r,k,filled)
   local P0,P1,P2,P3
-  radius = radius * 59.5 -- next arbitrary scale factor; the circle has radius "1" in x-units
+  r = r * 59.5 -- next arbitrary scale factor; the circle has radius "1" in x-units
+  local rk = 0.55228*r*k
   
-  P0 = {radius,0}          P1 = {radius,radius*k}
-  P2 = {radius*k,radius}   P3 = {0,radius}
+  P0 = {r,0}
+  move  (P0[1],P0[2])
 
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
+  P1 = {r,rk}   P2 = {rk,r}   P3 = {0,r}
+  curve (P1,P2,P3)
 
-  P0 = {-radius,0}         P1 = {-radius,radius*k}
-  P2 = {-radius*k,radius}  P3 = {0,radius}
+  P1 = {-rk,r}  P2 = {-r,rk}  P3 = {-r,0}
+  curve (P1,P2,P3)
 
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
+  P1 = {-r,-rk} P2 = {-rk,-r} P3 = {0,-r}
+  curve (P1,P2,P3)  
 
-  P0 = {-radius,0}         P1 = {-radius,-radius*k}
-  P2 = {-radius*k,-radius} P3 = {0,-radius}
+  P1 = {rk,-r}  P2 = {r,-rk}  P3 = {r,0}
+  curve (P1,P2,P3)
 
-  move  (P0[1],P0[2]) curve (P1,P2,P3)  
-
-  P0 = {radius,0}          P1 = {radius,-radius*k}
-  P2 = {radius*k,-radius}  P3 = {0,-radius}
-
-  move  (P0[1],P0[2]) curve (P1,P2,P3)
   if filled then
     fill()
   end
@@ -775,7 +780,7 @@ function placerectangleat(x1,y1,x2,y2,filled)
   xfac = tex.pagewidth/gridnrx/65536
   yfac = tex.pageheight/gridnry/65536
   x2 = (x2-x1)*xfac
-  y2 = (y2-y1)*yfac
+  y2 = (y1-y2)*yfac
   move(0,0)
   line(x2,0)
   line(x2,y2)
