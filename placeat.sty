@@ -8,12 +8,12 @@
 %% 
 %% EXPERIMENTAL CODE
 %% 
-%% This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
+%% This package is copyright © 2020 Arno L. Trautmann. It may be distributed and/or
 %% modified under the conditions of the LaTeX Project Public License, either version 1.3c
 %% of this license or (at your option) any later version. This work has the LPPL mainten-
 %% ance status ‘maintained’.
 \ProvidesPackage{placeat}%
-  [2014/04/18 v0.1a absolute content positioning]
+  [2020/05/02 v0.1d2 absolute content positioning]
 \RequirePackage{luatexbase}
 \RequirePackage{luacode}
 \RequirePackage{atbegshi}
@@ -76,7 +76,7 @@
     \expandafter\xdef\csname #8y\endcsname{\coy + \csname #1y\endcsname}
   }
 }
-\NewDocumentCommand\placeminipageat{d()O{10cm}m}{
+\NewDocumentCommand\placeminipageat{r()O{10cm}m}{
   \gdef\widthofplaceat{#2}
   \placeat(#1)
   {\begin{minipage}{\widthofplaceat}{#3}\end{minipage}}
@@ -91,8 +91,9 @@
 }
 \def\firstof #1,#2X{#1}
 \def\secondof #1,#2X{#2}
-\let\ifdrawgrid\iftrue
+\gdef\drawgridnum{1}
 \luaexec{
+  arrowheadlength = 5
   drawgrid = false
   nr       = 0
   dacoord  = {}
@@ -106,7 +107,7 @@
 \AtBeginDocument{
   \AtBeginShipout{%
     \AtBeginShipoutUpperLeftForeground{%
-      \ifdrawgrid\drawgrid\fi
+      \ifnum\drawgridnum = 1 \drawgrid\fi
       \luaexec{%
         for i = 1,nr do
           tex.print(dacoord[i].."{\\csname command"..(i).."\\endcsname}")
@@ -149,63 +150,65 @@
     }
   }
 }
-\NewDocumentCommand\placelineat{od()d()}{
-  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+\NewDocumentCommand\placelineat{or()r()}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}} % only to fix the color!
     \luatexlatelua{placelineat(#2,#3)}
   }
 }
-\NewDocumentCommand\placearrowat{od()d()}{
+\NewDocumentCommand\placearrowat{or()r()}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placearrowat(#2,#3)}
   }
 }
-\NewDocumentCommand\placecircleat{od()D(){.3}}{
+\NewDocumentCommand\placecircleat{or()D(){.3}}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placecircleat(#3,1)}
   }
 }
-\NewDocumentCommand\placefilledcircleat{od()D(){.3}}{
+\NewDocumentCommand\placefilledcircleat{or()D(){.3}}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placecircleat(#3,1,true)}
   }
 }
-\NewDocumentCommand\placesquareat{od()G{3}}{
+\NewDocumentCommand\placesquareat{or()G{3}}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placesquareat(#3)}
   }
 }
-\NewDocumentCommand\placecurveat{od()d()d()d()}{
+\NewDocumentCommand\placecurveat{or()r()r()r()}{
  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placecurveat(#2,#3,#4,#5)}
   }
 }
-\NewDocumentCommand\placerectangleat{O{black}d()d()}{
+\NewDocumentCommand\placerectangleat{O{black}r()d()}{
   \placeat(#2){\ignorespaces\color{#1}%
     \luatexlatelua{placerectangleat(#2,#3)}
   }
 }
-\NewDocumentCommand\placefilledrectangleat{O{black}d()d()}{
+\NewDocumentCommand\placefilledrectangleat{O{black}r()r()}{
   \placeat(#2){\ignorespaces\color{#1}%
     \luatexlatelua{placerectangleat(#2,#3,true)}
   }
 }
-\NewDocumentCommand\placeroundedat{sO{black}d()D(){0.1}D<>{1.5}}{
+\NewDocumentCommand\placeroundedat{sO{black}r()D(){0.1}D<>{1.5}}{
   \placeat(#3){\ignorespaces\color{#2}%
     \IfBooleanTF{#1}{\luatexlatelua{placecircleat(#4,#5,true)}}%
                     {\luatexlatelua{placecircleat(#4,#5)}}
   }
 }
 \ExplSyntaxOn
+\gdef\drawgridnum{1}
 \keys_define:nn{placeat}{
   alphanumgrid.code:n    = \directlua{alphanumgrid = true},
-  final.code:n           = \luaexec{placeat_final = true} \let\ifdrawgrid\iffalse,
-  drawgrid.code:n        = \global\let\ifdrawgrid\iftrue,
+  arrowheadlength.code:n = \directlua{arrowheadlength=#1},
+  final.code:n           = \luaexec{placeat_final = true} \gdef\drawgridnum{0},
+  drawgrid.code:n        = \gdef\drawgridnum{1},
   gridnumber.code:n      = \directlua{gridnr = #1 gridnrx = gridnr~gridnry = gridnr},
   gridnumberx.code:n     = \directlua{gridnrx = #1},
   gridnumbery.code:n     = \directlua{gridnry = #1},
   gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
   linewidth.code:n       = {\placeat(1,1){\luatexlatelua{linewidth(#1)}}},  %% FIXME: this is a very nasty hack to implement user's choice of linewidth!
-  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
+  nogrid.code:n          =  \gdef\drawgridnum{0},
   numnumgrid.code:n      = \directlua{alphanumgrid = false},
   offsetx.code:n         = \directlua{offsetx = #1},
   offsety.code:n         = \directlua{offsety = #1},

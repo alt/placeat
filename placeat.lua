@@ -8,7 +8,7 @@
 --  
 --  EXPERIMENTAL CODE
 --  
---  This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
+--  This package is copyright © 2020 Arno L. Trautmann. It may be distributed and/or
 --  modified under the conditions of the LaTeX Project Public License, either version 1.3c
 --  of this license or (at your option) any later version. This work has the LPPL mainten-
 --  ance status ‘maintained’.
@@ -86,9 +86,9 @@ function placearrowat(x1,y1,x2,y2)
   move(0,0)                           -- start
   line(xar,yar)                       -- draw main line
   move(xar,yar)
-  line(xar-5*parx+5*perpx,yar-5*pary+5*perpy)  -- draw arrowhead
+  line(xar-arrowheadlength*parx+arrowheadlength*perpx,yar-arrowheadlength*pary+arrowheadlength*perpy)  -- draw arrowhead
   move(xar,yar)
-  line(xar-5*parx-5*perpx,yar-5*pary-5*perpy)
+  line(xar-arrowheadlength*parx-arrowheadlength*perpx,yar-arrowheadlength*pary-arrowheadlength*perpy)
   stroke()
 end
 

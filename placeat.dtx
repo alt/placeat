@@ -11,14 +11,14 @@ To produce the package files, run lualatex on placeat.dtx, wich should result in
   placeat.sty  (LaTeX user interface)
   placeat.lua  (Lua package code)
 
-You need an up-to-date TeX Live (2013) and compilation with LuaLaTeX to use this package. A full, updated MiKTeX should also work. (Not tested.)
+You need an up-to-date TeX Live (2020 at best) and compilation with LuaLaTeX to use this package. A full, updated MiKTeX should also work. (Not tested.)
 
 For any comments or suggestions, contact me:
 arno dot trautmann at gmx dot de
 
 Hope you have fun with this package!
 
-This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
+This package is copyright © 2020 Arno L. Trautmann. It may be distributed and/or
 modified under the conditions of the LaTeX Project Public License, either version 1.3c
 of this license or (at your option) any later version. This work has the LPPL mainten-
 ance status ‘maintained’.
@@ -36,7 +36,7 @@ ance status ‘maintained’.
 
 EXPERIMENTAL CODE
 
-This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
+This package is copyright © 2020 Arno L. Trautmann. It may be distributed and/or
 modified under the conditions of the LaTeX Project Public License, either version 1.3c
 of this license or (at your option) any later version. This work has the LPPL mainten-
 ance status ‘maintained’.
@@ -72,12 +72,13 @@ ance status ‘maintained’.
   array,
   babel,
   booktabs,
+  fontspec, %% has to be in this order because of strange check in fixltl2e …
   float,
-  fontspec,
   geometry,
+  graphicx,
   hyperref,
   microtype,
-  scrpage2,
+  scrlayer-scrpage,
   tabu
 }
 \usepackage[svgnames]{xcolor}
@@ -97,11 +98,20 @@ ance status ‘maintained’.
 \usepackage{placeat}
 \placeatsetup{nogrid}
 
-\begin{document}
-\centerline{\fontsize{40}{55}\selectfont placeat}
+\def\ALT{%
+  \bgroup%
+  \fontspec{Latin Modern Sans}%
+  A%
+  \kern-.37em \raisebox{.7ex}{\scalebox{0.25}{L}}%
+  \kern-.0em \raisebox{-0.98ex}{T}%
+  \egroup%
+}
 
-\centerline{v0.1a}
-\centerline{\hspace*{2cm} Arno Trautmann}
+\begin{document}
+\centerline{\fontsize{40}{55}\selectfont place\ALT}
+
+\centerline{v0.1d2}
+\centerline{\hspace*{2cm} Arno L. Trautmann}
 \centerline{\href{mailto:arno.trautmann@gmx.de}{arno.trautmann@gmx.de}}
 
 \kern.5cm
@@ -112,12 +122,12 @@ The package \textsf{placeat} offers the command \verb|\placeat(2,5){}| which pla
 \begin{figure}[b]
 \small\noindent
 \fbox{\parbox{.97\textwidth}{
-This package is copyright © 2014 Arno L. Trautmann. It may be distributed and/or
+This package is copyright © 2017 Arno L. Trautmann. It may be distributed and/or
 modified under the conditions of the LaTeX Project Public License, either version 1.3c
 of this license or (at your option) any later version. This work has the LPPL maintenance status ‘maintained’. Whoever notes the face in the title gets a cookie when we meet.}}
 \end{figure}
 
-\textcolor{red}{\textls{ATTENTION}} This package is in a very preliminary version and released for testing.
+\textcolor{red}{\textls{ATTENTION}} This package is in a very preliminary version and released for testing only. Any feature might be subject to changes without notice.
 
 \section*{Introduction}
 This is the documentation of the package |placeat|. When you load the package, a grid is drawn on every page of your document to aid you at placing stuff where you want it to be. This mainly makes sense in presentations, but might be used in any document. The main macro of this package \verb|\placeat...{}| offers several ways to use it:
@@ -284,7 +294,6 @@ You need to load the \textsc{xcolor} package to use colors.\footnote{Why is it n
 
 By now, it is not possible to specify an rgb code or similar. If you want a very special color that is not defined in the \textsc{xcolor} package, just define it by yourself. However, as shown above, it is possible to mix colors using the \verb|red!50!green| syntax, which is very flexible and should cover normal every day use.
 
-
 \section{Example}
 Now, here are two examples on how to use the package. The first one is a code example only, while the second one shows the effect directly on the page.
 
@@ -351,20 +360,23 @@ Testing. Try to use this code and tell me what you think about it.
 
 Bug reporting. Tell me especially what is buggy. I'd like to keep the package rather small and simple, so some bugs might be called features, but we'll see.
 
-Suggestions. I'm open to extend the functionality. Just tell me what you want and I'll try to implement it as soon as possible. Which might be never. But also maybe the next day. Well, try it! ☺
+Suggestions. I'm open to extend the functionality. Just tell me what you want and I'll try to implement it as soon as possible. Which might be never. But also maybe the next day. Well, try it!~{\huge ☺}
+
+\section{Thanks}
+Of course I have to thank Paul Isambert again for the code for drawing to the pdf file. Also I want to thank Rembrandt Wolpert who was the first one to report bugs and feature requests.
 
 \newpage
 That's it for the documentation, have fun, and\vspace{2cm}
 
 \placeat(5,7){\Huge\rotatebox{45}{Happy \TeX ing!}}[happy]
-\placecircleat[red](4,4.5){.2}
-\placecircleat[green](9,4.5){.2}
-\placecircleat[blue](4,7.5){.2}
-\placecircleat[orange](9,7.5){.2}
+\placecircleat[red](4,4.5)(.2)
+\placecircleat[green](9,4.5)(.2)
+\placecircleat[blue](4,7.5)(.2)
+\placecircleat[orange](9,7.5)(.2)
 
 \begin{luacode}
 for i = 1,20 do
-  tex.print("\\placecircleat[blue](12,6){"..(0.05*i).."}")
+  tex.print("\\placecircleat[blue](12,6)("..(0.05*i)..")")
 end
 \end{luacode}
 
@@ -383,7 +395,7 @@ end
 % The Lua file is not found by using a simple |dofile("placeat.lua")| call, but we have to use kpse's |find_file|.
 %    \begin{macrocode}
 \ProvidesPackage{placeat}%
-  [2014/04/18 v0.1a absolute content positioning]
+  [2020/05/02 v0.1d2 absolute content positioning]
 \RequirePackage{luatexbase}
 \RequirePackage{luacode}
 \RequirePackage{atbegshi}
@@ -466,7 +478,7 @@ end
 % \subsection{Placing of floats etc.}
 % For floats and similar stuff, it might be necessary or useful to pack everything into a minipage. You can do this by yourself, but I thought it might be nice to specify a corresponding user interface. Using \verb|\placeminipageat| is the same as using \verb|\placeat{}{}{content}| where content is packed into a minipage. The first two argument of \verb|\placeminipageat| must be given in braces |{4}{5}| and determine the position of the content. The third argument is optional and specifies the width of the minipage; if not give, it is assumed to be 10cm, wide enough for mostly anything you ever will place at.
 %    \begin{macrocode}
-\NewDocumentCommand\placeminipageat{d()O{10cm}m}{
+\NewDocumentCommand\placeminipageat{r()O{10cm}m}{
   \gdef\widthofplaceat{#2}
   \placeat(#1)
   {\begin{minipage}{\widthofplaceat}{#3}\end{minipage}}
@@ -493,8 +505,9 @@ end
 %    \end{macrocode}
 % Setup of variables and macros we need later.
 %    \begin{macrocode}
-\let\ifdrawgrid\iftrue
+\gdef\drawgridnum{1}
 \luaexec{
+  arrowheadlength = 5
   drawgrid = false
   nr       = 0
   dacoord  = {}
@@ -504,14 +517,16 @@ end
   gridlinewidth = 0.01
   offsetx  = 0
   offsety  = 0
-} 
+}
 %    \end{macrocode}
 % Now the code that does the actual work here. We use Heiko Oberdiek's package \textsf{atbegshi} with the very useful macros \verb|\AtBeginShipout| and \verb|\AtBeginShipoutUpperLeftForeground|. Using these, we are free from any context of where the code is written, it is always executed at the shipout and therefore absolute positioning is possible.
+%
+% I have to use a quite weird way of checking wether to draw the grid or not, using a number instead of defining a \verb|\ifdrawgrid|. That one was working at some time, but now it is not anymore. No idea why, some handling of the input parsing in the arguments must have changed. Anyways, this is working and not too ugly, so we'll stick with that one for now.
 %    \begin{macrocode}
 \AtBeginDocument{
   \AtBeginShipout{%
     \AtBeginShipoutUpperLeftForeground{%
-      \ifdrawgrid\drawgrid\fi
+      \ifnum\drawgridnum = 1 \drawgrid\fi 
       \luaexec{%
         for i = 1,nr do
           tex.print(dacoord[i].."{\\csname command"..(i).."\\endcsname}")
@@ -564,47 +579,47 @@ end
 % 
 % I try to provide a basic set of stuff that might be useful. The \TeX\ interface implementation might change, but for now it is done with xparse instead of a much more saner simple |\def|. We will see where this will head to. First, there is an arrow, whose head looks very bad. I don't know how to fix this yet. Then there are circle, square and rectangle. 
 %    \begin{macrocode}
-\NewDocumentCommand\placelineat{od()d()}{
-  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
+\NewDocumentCommand\placelineat{or()r()}{
+  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}} % only to fix the color!
     \luatexlatelua{placelineat(#2,#3)}
   }
 }
-\NewDocumentCommand\placearrowat{od()d()}{
+\NewDocumentCommand\placearrowat{or()r()}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placearrowat(#2,#3)}
   }
 }
-\NewDocumentCommand\placecircleat{od()D(){.3}}{
+\NewDocumentCommand\placecircleat{or()D(){.3}}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placecircleat(#3,1)}
   }
 }
-\NewDocumentCommand\placefilledcircleat{od()D(){.3}}{
+\NewDocumentCommand\placefilledcircleat{or()D(){.3}}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placecircleat(#3,1,true)}
   }
 }
-\NewDocumentCommand\placesquareat{od()G{3}}{
+\NewDocumentCommand\placesquareat{or()G{3}}{
   \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placesquareat(#3)}
   }
 }
-\NewDocumentCommand\placecurveat{od()d()d()d()}{
+\NewDocumentCommand\placecurveat{or()r()r()r()}{
  \placeat(#2){\ignorespaces\IfValueT{#1}{\color{#1}}%
     \luatexlatelua{placecurveat(#2,#3,#4,#5)}
   }
 }
-\NewDocumentCommand\placerectangleat{O{black}d()d()}{
+\NewDocumentCommand\placerectangleat{O{black}r()d()}{
   \placeat(#2){\ignorespaces\color{#1}%
     \luatexlatelua{placerectangleat(#2,#3)}
   }
 }
-\NewDocumentCommand\placefilledrectangleat{O{black}d()d()}{
+\NewDocumentCommand\placefilledrectangleat{O{black}r()r()}{
   \placeat(#2){\ignorespaces\color{#1}%
     \luatexlatelua{placerectangleat(#2,#3,true)}
   }
 }
-\NewDocumentCommand\placeroundedat{sO{black}d()D(){0.1}D<>{1.5}}{
+\NewDocumentCommand\placeroundedat{sO{black}r()D(){0.1}D<>{1.5}}{
   \placeat(#3){\ignorespaces\color{#2}%
     \IfBooleanTF{#1}{\luatexlatelua{placecircleat(#4,#5,true)}}%
                     {\luatexlatelua{placecircleat(#4,#5)}}
@@ -617,16 +632,18 @@ end
 % Especially one thing will be annoying, the space-gobbling. Nice feature on one hand, but annoying inside the |\directlua| on the other hand. Therefore, we need the |~| to separate |gridnr| and |gridnry| below.
 %    \begin{macrocode}
 \ExplSyntaxOn
+\gdef\drawgridnum{1}
 \keys_define:nn{placeat}{
   alphanumgrid.code:n    = \directlua{alphanumgrid = true},
-  final.code:n           = \luaexec{placeat_final = true} \let\ifdrawgrid\iffalse,
-  drawgrid.code:n        = \global\let\ifdrawgrid\iftrue,
+  arrowheadlength.code:n = \directlua{arrowheadlength=#1},
+  final.code:n           = \luaexec{placeat_final = true} \gdef\drawgridnum{0},
+  drawgrid.code:n        = \gdef\drawgridnum{1},
   gridnumber.code:n      = \directlua{gridnr = #1 gridnrx = gridnr~gridnry = gridnr},
   gridnumberx.code:n     = \directlua{gridnrx = #1},
   gridnumbery.code:n     = \directlua{gridnry = #1},
   gridlinewidth.code:n   = \directlua{gridlinewidth = #1},
   linewidth.code:n       = {\placeat(1,1){\luatexlatelua{linewidth(#1)}}},  %% FIXME: this is a very nasty hack to implement user's choice of linewidth!
-  nogrid.code:n          = \global\let\ifdrawgrid\iffalse,
+  nogrid.code:n          =  \gdef\drawgridnum{0},
   numnumgrid.code:n      = \directlua{alphanumgrid = false},
   offsetx.code:n         = \directlua{offsetx = #1},
   offsety.code:n         = \directlua{offsety = #1},
@@ -719,9 +736,9 @@ function placearrowat(x1,y1,x2,y2)
   move(0,0)                           -- start
   line(xar,yar)                       -- draw main line
   move(xar,yar)                      
-  line(xar-5*parx+5*perpx,yar-5*pary+5*perpy)  -- draw arrowhead
+  line(xar-arrowheadlength*parx+arrowheadlength*perpx,yar-arrowheadlength*pary+arrowheadlength*perpy)  -- draw arrowhead
   move(xar,yar)
-  line(xar-5*parx-5*perpx,yar-5*pary-5*perpy)
+  line(xar-arrowheadlength*parx-arrowheadlength*perpx,yar-arrowheadlength*pary-arrowheadlength*perpy)
   stroke()
 end
 
