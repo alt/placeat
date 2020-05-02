@@ -110,7 +110,7 @@ ance status ‘maintained’.
 \begin{document}
 \centerline{\fontsize{40}{55}\selectfont place\ALT}
 
-\centerline{v0.1d2}
+\centerline{v0.1e}
 \centerline{\hspace*{2cm} Arno L. Trautmann}
 \centerline{\href{mailto:arno.trautmann@gmx.de}{arno.trautmann@gmx.de}}
 
@@ -395,7 +395,7 @@ end
 % The Lua file is not found by using a simple |dofile("placeat.lua")| call, but we have to use kpse's |find_file|.
 %    \begin{macrocode}
 \ProvidesPackage{placeat}%
-  [2020/05/02 v0.1d2 absolute content positioning]
+  [2020/05/02 v0.1e absolute content positioning]
 \RequirePackage{luatexbase}
 \RequirePackage{luacode}
 \RequirePackage{atbegshi}
@@ -678,7 +678,11 @@ function move (p1,p2)
 end
 
 function line(p1,p2)
-  pdf_print(p1,p2,"l")
+  if (p2) then
+    pdf_print(p1,p2,"l")
+  else
+    pdf_print(p1[1],p1[2],"l")
+  end
 end
 
 function curve(p11,p12,p21,p22,p31,p32)

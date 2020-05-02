@@ -28,7 +28,11 @@ function move (p1,p2)
 end
 
 function line(p1,p2)
-  pdf_print(p1,p2,"l")
+  if (p2) then
+    pdf_print(p1,p2,"l")
+  else
+    pdf_print(p1[1],p1[2],"l")
+  end
 end
 
 function curve(p11,p12,p21,p22,p31,p32)
